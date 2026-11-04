@@ -1,0 +1,176 @@
+<UserControl x:Class="StockSimulator.Views.BatchTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1400">
+
+    <Grid Margin="4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,8,0">
+            <StackPanel>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="基础行情" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="{Binding BaseInfo}" Style="{StaticResource HintText}" />
+                        <WrapPanel Margin="0,8,0,0">
+                            <ui:Button Content="捕获当前K线为基础" Command="{Binding CaptureBaseCommand}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="变体生成参数" Style="{StaticResource SectionTitle}" />
+
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="66" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="生成份数" Style="{StaticResource FieldLabel}" />
+                            <Slider Grid.Column="1" Minimum="1" Maximum="100" SmallChange="1"
+                                    Value="{Binding VariantCount}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontFamily="Consolas"
+                                       Text="{Binding VariantCount}" />
+                        </Grid>
+
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="66" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="价格扰动σ" Style="{StaticResource FieldLabel}" />
+                            <Slider Grid.Column="1" Minimum="0" Maximum="0.05" SmallChange="0.001"
+                                    Value="{Binding PriceJitter}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontFamily="Consolas"
+                                       Text="{Binding PriceJitter, StringFormat={}{0:P2}}" />
+                        </Grid>
+
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="66" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="量能扰动σ" Style="{StaticResource FieldLabel}" />
+                            <Slider Grid.Column="1" Minimum="0" Maximum="0.8" SmallChange="0.02"
+                                    Value="{Binding VolumeJitter}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontFamily="Consolas"
+                                       Text="{Binding VolumeJitter, StringFormat={}{0:P0}}" />
+                        </Grid>
+
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="66" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="趋势偏移幅度" Style="{StaticResource FieldLabel}" />
+                            <Slider Grid.Column="1" Minimum="0" Maximum="0.5" SmallChange="0.01"
+                                    Value="{Binding TrendShift}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontFamily="Consolas"
+                                       Text="{Binding TrendShift, StringFormat={}{0:P0}}" />
+                        </Grid>
+
+                        <WrapPanel Margin="0,6,0,0">
+                            <CheckBox Content="注入随机跳空" IsChecked="{Binding EnableGapInjection}" />
+                        </WrapPanel>
+
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="66" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="跳空次数" Style="{StaticResource FieldLabel}" />
+                            <Slider Grid.Column="1" Minimum="0" Maximum="10" SmallChange="1"
+                                    Value="{Binding GapCount}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontFamily="Consolas"
+                                       Text="{Binding GapCount}" />
+                        </Grid>
+
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="66" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="跳空幅度" Style="{StaticResource FieldLabel}" />
+                            <Slider Grid.Column="1" Minimum="0.005" Maximum="0.12" SmallChange="0.005"
+                                    Value="{Binding GapSize}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontFamily="Consolas"
+                                       Text="{Binding GapSize, StringFormat={}{0:P1}}" />
+                        </Grid>
+
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="种子步长" Style="{StaticResource FieldLabel}" />
+                            <TextBox Grid.Column="1" Text="{Binding SeedOffset}" />
+                        </Grid>
+
+                        <WrapPanel Margin="0,10,0,0">
+                            <ui:Button Content="批量生成" Command="{Binding GenerateVariantsCommand}"
+                                       Appearance="Primary" Icon="{ui:SymbolIcon Symbol=Play24}" />
+                            <ui:Button Content="清空" Command="{Binding ClearVariantsCommand}" Appearance="Danger"
+                                       Icon="{ui:SymbolIcon Symbol=Delete24}" />
+                        </WrapPanel>
+                        <TextBlock Style="{StaticResource HintText}" Margin="0,8,0,0"
+                                   Text="每份变体使法独立种子（基础种子 + 序号 × 种子步长），可完全复现。趋势偏移法于模拟不同强度的单边行情，跳空法于测试网格的缺口风险。" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource Card}">
+                <WrapPanel>
+                    <ui:Button Content="应法到工作区（可继续手绘）" Command="{Binding ApplySelectedCommand}"
+                               Appearance="Primary" Icon="{ui:SymbolIcon Symbol=ArrowSync24}" />
+                    <ui:Button Content="导出选中变体" Command="{Binding ExportSelectedCommand}"
+                               Icon="{ui:SymbolIcon Symbol=ArrowDownload24}" />
+                    <ui:Button Content="导出全部到目录" Command="{Binding ExportAllCommand}"
+                               Icon="{ui:SymbolIcon Symbol=FolderOpen24}" />
+                    <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                               FontWeight="SemiBold" Margin="10,0,0,0" />
+                </WrapPanel>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource Card}">
+                <DataGrid ItemsSource="{Binding Variants}" SelectedItem="{Binding SelectedVariant}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="变体" Binding="{Binding Name}" Width="90" IsReadOnly="True" />
+                        <DataGridTextColumn Header="K线数" Binding="{Binding BarCount}" Width="70" IsReadOnly="True" />
+                        <DataGridTextColumn Header="区间涨跌" Binding="{Binding ChangePctDisplay}" Width="90" IsReadOnly="True" />
+                        <DataGridTextColumn Header="最大回撤" Binding="{Binding MaxDrawdownDisplay}" Width="90" IsReadOnly="True" />
+                        <DataGridTextColumn Header="年化波动" Binding="{Binding AnnualVolatilityDisplay}" Width="90" IsReadOnly="True" />
+                        <DataGridTextColumn Header="平均成交量" Binding="{Binding AvgVolumeDisplay}" Width="100" IsReadOnly="True" />
+                        <DataGridTextColumn Header="期末价" Binding="{Binding LastClose, StringFormat={}{0:F2}}" Width="80" IsReadOnly="True" />
+                        <DataGridTextColumn Header="区间" Binding="{Binding RangeDisplay}" Width="*" IsReadOnly="True" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <Border Grid.Row="2" Style="{StaticResource Card}">
+                <TextBlock Style="{StaticResource HintText}"
+                           Text="法法：先在 Tab1 生成或 Tab2 导入/手绘一套基础行情 → 回到本页「批量生成」→ 选中一份「应法到工作区」继续编辑，或「导出全部到目录」得到多份 CSV + index.csv 统计表。" />
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

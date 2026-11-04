@@ -1,0 +1,255 @@
+<UserControl x:Class="StockSimulator.Views.ExportTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1400">
+
+    <Grid Margin="4">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ============ 列1：导出 + 工程 ============ -->
+        <ScrollViewer Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,8,0">
+            <StackPanel>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="导出标准 OHLCV CSV" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Style="{StaticResource HintText}" Margin="0,0,0,6"
+                                   Text="前 6 列固定为 Date,Open,High,Low,Close,Volume，可直接被网格回测软件识别。" />
+                        <CheckBox Content="包含成交额 Amount" IsChecked="{Binding IncludeAmount}" />
+                        <CheckBox Content="包含涨跌幅 ChangePct(%)" IsChecked="{Binding IncludeChangePct}" />
+                        <CheckBox Content="包含标记 Flag(S/U/D/X/G)" IsChecked="{Binding IncludeFlag}" />
+                        <CheckBox Content="包含复权因子 AdjFactor" IsChecked="{Binding IncludeAdjFactor}" />
+                        <CheckBox Content="包含滑点列 SlippageBps / SlippageTicks" IsChecked="{Binding IncludeSlippage}" />
+                        <CheckBox Content="日线及以上只输出日期" IsChecked="{Binding DateOnlyForDaily}" />
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="60" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="价格小数位" Style="{StaticResource FieldLabel}" />
+                            <TextBox Grid.Column="1" Text="{Binding PriceDecimals}" />
+                        </Grid>
+                        <WrapPanel Margin="0,10,0,0">
+                            <ui:Button Content="导出 CSV" Command="{Binding ExportCsvCommand}"
+                                       Appearance="Primary" Icon="{ui:SymbolIcon Symbol=ArrowDownload24}" />
+                            <ui:Button Content="打开所在目录" Command="{Binding OpenExportFolderCommand}"
+                                       Icon="{ui:SymbolIcon Symbol=FolderOpen24}" />
+                        </WrapPanel>
+                        <TextBlock Text="{Binding ExportSummary}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                                   FontWeight="SemiBold" Margin="0,8,0,0" />
+                        <TextBlock Text="{Binding LastExportPath}" Style="{StaticResource HintText}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="工程文件（*.ksproj.json）" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Style="{StaticResource HintText}" Margin="0,0,0,6"
+                                   Text="工程保存整套分段参数、事件、手绘K线、标注、滑点分段与快照，可随时继续编辑。" />
+                        <WrapPanel>
+                            <ui:Button Content="保存工程" Command="{Binding SaveProjectCommand}"
+                                       Appearance="Primary" Icon="{ui:SymbolIcon Symbol=Save24}" />
+                            <ui:Button Content="打开工程" Command="{Binding LoadProjectCommand}"
+                                       Icon="{ui:SymbolIcon Symbol=FolderOpen24}" />
+                            <ui:Button Content="新建" Command="{Binding NewProjectCommand}" Appearance="Danger"
+                                       Icon="{ui:SymbolIcon Symbol=Add24}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="多周期转换" Style="{StaticResource SectionTitle}" />
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="目标周期" Style="{StaticResource FieldLabel}" />
+                            <ComboBox Grid.Column="1" Margin="0,0,6,0" ItemsSource="{Binding Periods}"
+                                      SelectedItem="{Binding TargetPeriod}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <ui:Button Grid.Column="2" Content="转换" Command="{Binding ConvertPeriodCommand}" />
+                        </Grid>
+                        <TextBlock Text="{Binding PeriodHint}" Style="{StaticResource HintText}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ============ 列2：模板 + 联动 ============ -->
+        <ScrollViewer Grid.Row="0" Grid.Column="1" VerticalScrollBarVisibility="Auto" Margin="0,0,8,0">
+            <StackPanel>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="行情模板管理" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Style="{StaticResource HintText}" Margin="0,0,0,6"
+                                   Text="把当前分段参数保存为模板，下次一键套用（存于 %AppData%\StockSimulator\Templates）。" />
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="模板名称" Style="{StaticResource FieldLabel}" />
+                            <TextBox Grid.Column="1" Text="{Binding TemplateName, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="已有模板" Style="{StaticResource FieldLabel}" />
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding TemplateNames}"
+                                      SelectedItem="{Binding SelectedTemplateName}" />
+                        </Grid>
+                        <WrapPanel>
+                            <ui:Button Content="保存为模板" Command="{Binding SaveTemplateCommand}"
+                                       Icon="{ui:SymbolIcon Symbol=Save24}" />
+                            <ui:Button Content="套用" Command="{Binding LoadTemplateCommand}" Appearance="Primary"
+                                       Icon="{ui:SymbolIcon Symbol=Checkmark24}" />
+                            <ui:Button Content="删除" Command="{Binding DeleteTemplateCommand}" Appearance="Danger"
+                                       Icon="{ui:SymbolIcon Symbol=Delete24}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="联动：一键发送到网格回测" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Style="{StaticResource HintText}" Margin="0,0,0,6"
+                                   Text="通过内存对象直接传递当前K线（含A股规则、滑点分段），不写文件、不序列化。网格回测模块实现 IGridBacktestReceiver 即可接收。" />
+                        <WrapPanel>
+                            <ui:Button Content="发送到网格回测" Command="{Binding SendToGridBacktestCommand}"
+                                       Appearance="Primary" Icon="{ui:SymbolIcon Symbol=ArrowExportLtr24}" />
+                            <ui:Button Content="去手绘页继续编辑" Command="{Binding GoToDrawTabCommand}"
+                                       Icon="{ui:SymbolIcon Symbol=Pen24}" />
+                        </WrapPanel>
+                        <TextBlock Text="{Binding HandoffStatus}" Style="{StaticResource HintText}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="A股规则（导出同步生效）" Style="{StaticResource SectionTitle}" />
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="代码 / 名称" Style="{StaticResource FieldLabel}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <TextBox Text="{Binding Rules.Symbol, UpdateSourceTrigger=PropertyChanged}" Width="90" Margin="0,0,6,0" />
+                                <TextBox Text="{Binding Rules.DisplayName, UpdateSourceTrigger=PropertyChanged}" MinWidth="140" />
+                            </StackPanel>
+                        </Grid>
+                        <WrapPanel Margin="0,6,0,0">
+                            <CheckBox Content="启用涨跌停" IsChecked="{Binding Rules.EnablePriceLimit}" />
+                            <CheckBox Content="价格取整到tick" IsChecked="{Binding Rules.RoundPricesToTick}" />
+                        </WrapPanel>
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="70" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="涨跌停档位" Style="{StaticResource FieldLabel}" />
+                            <ComboBox Grid.Column="1" Margin="0,0,6,0" ItemsSource="{Binding LimitModes}"
+                                      SelectedItem="{Binding Rules.LimitMode}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBox Grid.Column="2" Text="{Binding Rules.TickSize, StringFormat={}{0:F2}}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ============ 列3：快照 ============ -->
+        <Grid Grid.Row="0" Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="快照对比" Style="{StaticResource SectionTitle}" />
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding SnapshotName, UpdateSourceTrigger=PropertyChanged}" />
+                        <ui:Button Grid.Column="1" Content="存快照" Command="{Binding TakeSnapshotCommand}"
+                                   Appearance="Primary" Icon="{ui:SymbolIcon Symbol=Camera24}" Margin="6,0,0,0" />
+                    </Grid>
+                    <ListBox ItemsSource="{Binding Snapshots}" SelectedItem="{Binding SelectedSnapshot}" Height="120"
+                             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" />
+                                    <TextBlock Text="{Binding Bars.Count, StringFormat=（{0}根）}"
+                                               Style="{StaticResource HintText}" Margin="6,0,0,0" />
+                                    <TextBlock Text="{Binding Stats.ChangePctDisplay}" Margin="8,0,0,0"
+                                               Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <WrapPanel Margin="0,6,0,0">
+                        <ui:Button Content="与当前对比" Command="{Binding CompareSnapshotCommand}" Appearance="Primary"
+                                   Icon="{ui:SymbolIcon Symbol=DataTrending24}" />
+                        <ui:Button Content="载入快照" Command="{Binding LoadSnapshotCommand}"
+                                   Icon="{ui:SymbolIcon Symbol=ArrowImport24}" />
+                        <ui:Button Content="导出快照" Command="{Binding ExportSnapshotCommand}"
+                                   Icon="{ui:SymbolIcon Symbol=ArrowDownload24}" />
+                        <ui:Button Content="删除" Command="{Binding RemoveSnapshotCommand}" Appearance="Danger"
+                                   Icon="{ui:SymbolIcon Symbol=Delete24}" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding CompareSummary}" Style="{StaticResource HintText}" Margin="0,6,0,0" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource Card}">
+                <DataGrid ItemsSource="{Binding CompareRows}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="指标" Binding="{Binding Name}" Width="*" IsReadOnly="True" />
+                        <DataGridTextColumn Header="快照" Binding="{Binding SnapshotValue}" Width="90" IsReadOnly="True" />
+                        <DataGridTextColumn Header="当前" Binding="{Binding CurrentValue}" Width="90" IsReadOnly="True" />
+                        <DataGridTextColumn Header="差异" Binding="{Binding Delta}" Width="80" IsReadOnly="True" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <Border Grid.Row="2" Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                <TextBlock Text="{Binding Disclaimer}" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                           TextWrapping="Wrap" FontSize="12" />
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
